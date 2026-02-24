@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Keyword Mixer — Free Google Ads Keyword Combination Tool</title>
-<meta name="description" content="Generate all keyword combinations instantly. No ads, no login, no tracking. 100% free client-side keyword mixer for Google Ads campaigns.">
-<meta name="keywords" content="keyword mixer, keyword combination tool, google ads keywords, PPC keywords, cartesian product keywords">
+<title>Keyword Mixer & Wrapper — Free Google Ads Keyword Combination Tool</title>
+<meta name="description" content="Generate all keyword combinations and wrap existing lists in match type format. Free keyword mixer + keyword wrapper for Google Ads, Bing Ads & Amazon PPC. No ads, no login.">
+<meta name="keywords" content="keyword mixer, keyword wrapper, keyword combination tool, google ads keywords, PPC keywords, keyword match type wrapper, cartesian product keywords">
 <link rel="canonical" href="https://maxmini0214.github.io/keyword-mixer/">
-<meta property="og:title" content="Keyword Mixer — Free Keyword Combination Tool">
+<meta property="og:title" content="Keyword Mixer & Wrapper — Free Keyword Combination Tool">
 <meta property="og:description" content="Generate all keyword combinations instantly. No ads, no login, no tracking.">
 <meta property="og:url" content="https://maxmini0214.github.io/keyword-mixer/">
 <meta property="og:type" content="website">
@@ -87,6 +87,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes! Use the Save button to store your current keywords as a named preset. Use Load to restore any saved preset instantly. All presets are stored in your browser's localStorage — nothing is sent to a server. You can also use the Share button to create a shareable URL."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a keyword wrapper?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A keyword wrapper takes an existing list of keywords and wraps each one in Google Ads match type format: broad (no wrapper), phrase (quotes), exact (brackets), or modified broad (+prefix). This saves time when preparing keyword lists for import into Google Ads Editor or any PPC platform."
       }
     }
   ]
@@ -247,10 +255,29 @@ h1 span{color:var(--accent)}
   <div class="output" id="output"></div>
 
   <div style="margin:20px auto;max-width:500px;background:linear-gradient(135deg,#4361ee,#818cf8);border-radius:12px;padding:20px;text-align:center;color:white;">
-  <h3 style="margin:0 0 8px">🔑 SEO Keyword Pro Pack — $3</h3>
-  <p style="margin:0 0 12px;opacity:0.9;font-size:14px">Advanced mixing algorithms: broad match, phrase match, negative keywords & competitor gap analysis.</p>
-  <a href="https://payhip.com/b/4FosR" target="_blank" style="display:inline-block;background:white;color:#4361ee;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Get It Now →</a>
+  <h3 style="margin:0 0 8px">📦 Developer Cheat Sheet Bundle — $7</h3>
+  <p style="margin:0 0 12px;opacity:0.9;font-size:14px">DSA, System Design, SQL, Docker, Git & more — 6 cheat sheets in one bundle. Print-ready PDF.</p>
+  <a href="https://maxmini.gumroad.com/l/dev-cheatsheet-bundle" target="_blank" style="display:inline-block;background:white;color:#4361ee;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Get the Bundle →</a>
   </div>
+
+  <section style="margin:2.5rem 0;padding:0">
+    <h2 id="keyword-wrapper" style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem;color:var(--fg)">🔄 Keyword Wrapper</h2>
+    <p style="font-size:.85rem;color:var(--fg2);margin-bottom:1rem;line-height:1.6">Already have a keyword list? Paste it below and wrap every keyword in your desired match type format — ready to import into Google Ads.</p>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem">
+      <textarea id="wrapInput" style="width:100%;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-family:var(--font);font-size:.95rem;resize:vertical;min-height:80px;outline:none;line-height:1.8;border-radius:6px;padding:.5rem" placeholder="running shoes&#10;best sneakers online&#10;buy sports shoes near me" rows="4" spellcheck="false"></textarea>
+      <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center">
+        <div class="match-btns">
+          <button class="match-btn wrap-match active" data-wrapmatch="broad" onclick="setWrapMatch(this)">Broad</button>
+          <button class="match-btn wrap-match" data-wrapmatch="phrase" onclick="setWrapMatch(this)">Phrase ""</button>
+          <button class="match-btn wrap-match" data-wrapmatch="exact" onclick="setWrapMatch(this)">Exact []</button>
+          <button class="match-btn wrap-match" data-wrapmatch="modified" onclick="setWrapMatch(this)">+Modified</button>
+        </div>
+        <button class="btn btn-primary" onclick="wrapKeywords()" style="margin-left:auto">🔄 Wrap</button>
+        <button class="btn btn-success" onclick="copyWrap()">📋 Copy</button>
+      </div>
+    </div>
+    <div class="output" id="wrapOutput" style="min-height:60px"></div>
+  </section>
 
   <section style="margin:2.5rem 0;padding:0">
     <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:1rem;color:var(--fg)">How to Use Keyword Mixer</h2>
@@ -629,6 +656,42 @@ function deletePreset(idx) {
   showPresets();
   toast(`Deleted "${name}"`);
 }
+
+// Keyword Wrapper
+let wrapMatchType = 'broad';
+function setWrapMatch(btn) {
+  document.querySelectorAll('.wrap-match').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  wrapMatchType = btn.dataset.wrapmatch;
+  if (document.getElementById('wrapOutput').textContent.trim()) wrapKeywords();
+}
+function wrapKeywords() {
+  const raw = document.getElementById('wrapInput').value;
+  const keywords = raw.split(/[\n,]+/).map(k => k.trim()).filter(Boolean);
+  if (!keywords.length) { document.getElementById('wrapOutput').textContent = ''; return; }
+  const wrapped = keywords.map(k => {
+    switch(wrapMatchType) {
+      case 'phrase': return `"${k}"`;
+      case 'exact': return `[${k}]`;
+      case 'modified': return k.split(/\s+/).map(w => '+' + w).join(' ');
+      default: return k;
+    }
+  });
+  document.getElementById('wrapOutput').textContent = wrapped.join('\n');
+}
+function copyWrap() {
+  const text = document.getElementById('wrapOutput').textContent;
+  if (!text) { toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(text).then(() => {
+    toast(`Copied ${text.split('\n').length} wrapped keywords!`);
+    document.getElementById('wrapOutput').classList.add('copied');
+    setTimeout(() => document.getElementById('wrapOutput').classList.remove('copied'), 600);
+  });
+}
+// Auto-wrap on input
+document.getElementById('wrapInput')?.addEventListener('input', () => {
+  if (document.getElementById('wrapInput').value.trim()) wrapKeywords();
+});
 
 init();
 </script>
